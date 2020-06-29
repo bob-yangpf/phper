@@ -18,7 +18,15 @@ AngularJS提交规范 逐渐被大家认可,也成为了通用的提交规范. �
 
 ##  规范详情
 
-每次提交，Commit message 都包括三个部分：Header，Body 和 Footer
+每次提交，Commit message 都包括三个部分：Header(line 1)，Body 和 Footer
+
+```
+<type>(<scope>): <subject>
+<BLANK LINE>
+<body>
+<BLANK LINE>
+<footer>
+```
 
 ### Header
 
@@ -113,10 +121,18 @@ Footer 部分只用于两种情况。
 
 **（2）关闭 Issue**
 
-如果当前 commit 针对某个或者多个issue
+如果当前 commit 针对某个或者多个issue 
+
+> github上可以直接关联`PR`和`ISSUE` ,`gitlab`可以和 `JIRA`配合,具体见 [GitLab Jira integration](https://docs.gitlab.com/ee/user/project/integrations/jira.html)
 
 ```bash
- Closes #123, #245, #992
+Close #123 
+```
+
+OR
+
+```
+Closes #123, #245, #992
 ```
 
 ### Revert
@@ -133,9 +149,152 @@ Body部分的格式是固定的，必须写成`This reverts commit <hash>.`，�
 
 如果当前 commit 与被撤销的 commit，在同一个发布（release）里面，那么它们都不会出现在 Change log 里面。如果两者在不同的发布，那么当前 commit，会出现在 Change log 的`Reverts`小标题下面。
 
-# 如何使用
+## 如何使用
 
-## 其他
+### 通过配置git模板使用
+
+#### 创建commit message模板
+
+文本格式的按照自己的习惯创建就好,比如 创建一个文件`.gittemplate.txt`
+
+```
+fix(scope): subject (#124)
+
+desc
+
+PR Close #37594
+
+类型字段包含:
+  feat：新功能（feature）
+  fix：修复bug
+  docs：文档（documentation）
+  style： 格式化 ESLint调整等（不影响代码运行的变动）
+  refactor：重构（即不是新增功能，也不是修改bug的代码变动）
+  test：增加测试
+  chore：构建过程或辅助工具的变动
+影响范围：
+    用于说明 commit 影响的范围，比如修改的登录页、账户中心页等
+主题：
+   commit目的的简短描述，不超过50个字符
+JIRA:
+  如果有对应的jira 请附上jira号
+Body 部分是对本次 commit 的详细描述，可以分成多行
+Footer用来关闭 Issue或以BREAKING CHANGE开头，后面是对变动的描述、
+   以及变动理由和迁移方法
+```
+
+> 里面你感觉不需要的都可以去掉. 提交的时候,`git commit`这一部分会自动展示到commit message里   手动删除不需要的,只留需要的一部分就可以.
+
+#### 配置gitconfig
+
+可以配置到单个项目的git config里 也可以配置到全局里,这个看个人使用情况
+
+```
+ [commit]
+   template= D:\\document\\wwwroot\\.gittemplate.txt
+```
+
+> 注意windows下路径要加双斜杠 不然会报错
+
+#### TortoiseGit里使用
+
+右键`菜单->TortoiseGit->setting->Git` Edit local .git/config(当前仓库) 或者 Edit global .gitconfig (全局)
+
+### Commitizen自动校验
+
+[Commitizen](https://github.com/commitizen/cz-cli)是一个撰写合格 Commit message 的工具,会在提交时候校验commit message是否规范。
+
+此种方式因为需要安装node环境等,我这边感觉不太需要,就没有强制使用.需要的可以参看其他文章也有很多,这里就不再赘述
+
+## 生成ChangeLog
+
+如果你的所有 Commit 都符合 Angular 格式，那么发布新版本时， Change log 就可以用脚本自动生成（[例1](https://github.com/ajoslin/conventional-changelog/blob/master/CHANGELOG.md)，[例2](https://github.com/karma-runner/karma/blob/master/CHANGELOG.md)，[例3](https://github.com/btford/grunt-conventional-changelog/blob/master/CHANGELOG.md)）。
+
+生成的文档包括以下三个部分。
+
+> - New features
+> - Bug fixes
+> - Breaking changes.
+
+每个部分都会罗列相关的 commit ，并且有指向这些 commit 的链接。当然，生成的文档允许手动修改，所以发布前，你还可以添加其他内容。
+
+### [conventional-changelog](https://github.com/ajoslin/conventional-changelog)
+
+#### 安装
+
+```bash
+npm install -g conventional-changelog
+```
+
+#### 追加生成
+
+```
+cd my-project
+conventional-changelog -p angular -i CHANGELOG.md -w
+```
+
+上面命令不会覆盖以前的 Change log，只会在`CHANGELOG.md`的头部加上自从上次发布以来的变动。
+
+#### 生成所有
+
+```bash
+conventional-changelog -p angular -i CHANGELOG.md -w -r 0
+```
+
+#### 使用命令简化
+
+为了方便使用，可以将其写入`package.json`的`scripts`字段。
+
+```javascript
+{
+  "scripts": {
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w -r 0"
+  }
+}
+```
+
+以后，直接运行下面的命令即可。
+
+```
+npm run changelog
+```
+
+#### 配套插件
+
+- [grunt](https://github.com/btford/grunt-conventional-changelog)
+- [gulp](https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/gulp-conventional-changelog)
+- [atom](https://github.com/conventional-changelog/atom-conventional-changelog)
+- [vscode](https://github.com/axetroy/vscode-changelog-generator)
+
+## 样例
+
+### 一行的
+
+```
+docs(changelog): update changelog to beta.5
+```
+
+### 有body的
+
+```
+fix(release): need to depend on latest rxjs and zone.js
+
+The version in our package.json gets copied to the one we publish, and users need the latest of these.
+```
+
+### 三者都有的
+
+```
+ci: decrease payload size limit for integration tests (#37784)
+
+This commit updates the payload size limit for the `hello_world` test app built using Closure. This is likely an effect of the changes in #36578 (that reduces the bundle size for most of the apps) and additional changes in subsequent commits.
+
+PR Close #37784
+```
+
+### 更多样例
+
+直接查看[Angular Commit]((https://github.com/angular/angular/commits/master)) 就可以
 
 ## 引用
 
