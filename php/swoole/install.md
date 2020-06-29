@@ -1,5 +1,7 @@
 # 安装Swoole
 
+[TOC]
+
 swoole 可以通过 `pecl install swoole` 来直接安装,`pecl `库一般会晚于github上的版本.所以,下面主要使用编译release版本安装
 
 > 编译的有另外一个好处就是可以指定版本
